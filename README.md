@@ -59,6 +59,6 @@ little too small, so need to make it a little bigger so the lithium-ion battery 
 
 
 To Do:
-Make 3D printed case bigger so the lithium-ion battery fits
-Add a power switch so the synchronizer can be shut off
-Add GPS module as an accurate time source
+- Make 3D printed case bigger so the lithium-ion battery fits
+- Add a power switch so the synchronizer can be shut off
+- Add GPS module as an accurate time source
