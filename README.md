@@ -1,20 +1,14 @@
 # UofIObservatoryClockSync
 Self-winding clock synchronizer with accurate timebase
-
 Self-winding clock synchronizer:
-
 Documentation/software:  https://github.com/mvogel932/UofIObservatoryClockSync
-
 
 
 General info:
 
 Master clock provides a one-second long pulse once per hour.  It connects the positive power lead to a terminal for that one second.  So what the clock sync circuit needs to do is close a relay for one second once an hour, exactly at 59 min 59 seconds past the hour, ending exactly at the hour.
-
 Per email from Mike Svec on 5/7/23, the self-winding clock uses 3V power.   Bruce Hannon added a transformer on the inside to power the rewind.
-
 Based on my research, it appears the sync coil on the self-winding clock should have a DC resistance of about 6 ohms.  So it will draw about 0.5 amps at 3 volts.
-
 
 
 Rev 2 Hardware (as of 2/5/2024):
@@ -44,8 +38,6 @@ Features:
 	• Works with Arduino or CircuitPython
 
 From <https://www.adafruit.com/product/5345> 
-![image](https://github.com/mvogel932/UofIObservatoryClockSync/assets/39836024/265aa93e-7b8a-4660-a2d4-978177d94e00)
-
 
 
 Relay board:  Adafruit power relay FeatherWing
