@@ -7,25 +7,6 @@ Documentation/software:  https://github.com/mvogel932/UofIObservatoryClockSync
 
 
 
-Status:
-
-5/20/2023
-Got Adafruit Feather HUZZAH w/ESP8266 WiFi board up and running with Arduino IDE 2.1.0.  Was able to connect to the board via micro USB cable and run Arduino sketches.  Loaded sketch_may20b.ino, which connects to my home WiFi and then connects to an NTP server, gets the current time, and prints out the day and time once a second.
-
-7/8/2023
-Got clock synchronizer circuit (Rev 1 Hardware) hooked up to the self-winding clock in the Observatory. Got the synchronizer working. The 3D printed case is a little too small, so need to make it a little bigger so the lithium-ion battery fits better.
-
-2/5/2024
-Since I have been unable to get WiFi access in the Observatory, decided to switch to using GPS for accurate time source.  The existing Rev 1 hardware with the ESP8266 processor is not compatible with the Adafruit GPS module, so I am switching to the ESP32-S2 Reverse TFT Feather development board from Adafruit.  Ordered it along with the GPS module.
-
-
-To Do:
-- Make new 3D-printed case for new rev 2 hardware
-- Add power switch for battery so device can be turned off
-- Write updated software for rev 2 hardware and GPS module
-
-
-
 General info:
 
 Master clock provides a one-second long pulse once per hour.  It connects the positive power lead to a terminal for that one second.  So what the clock sync circuit needs to do is close a relay for one second once an hour, exactly at 59 min 59 seconds past the hour, ending exactly at the hour.
@@ -63,6 +44,7 @@ Features:
 	• Works with Arduino or CircuitPython
 
 From <https://www.adafruit.com/product/5345> 
+![image](https://github.com/mvogel932/UofIObservatoryClockSync/assets/39836024/265aa93e-7b8a-4660-a2d4-978177d94e00)
 
 
 
@@ -78,39 +60,19 @@ Release time:  5 ms
 Inductive load max:  4A at 30 VDC
 
 
+GPS board: Adafruit Ultimate GPS FeatherWing
+https://www.adafruit.com/product/3133
 
-Power input(s) to sync circuit:  TBD
+
+Connector for output to clock synchronizer solenoid:
+5.5 x 2.1 mm DC Power Jack Socket Threaded Female Panel Mount Connector Adapter with Dustproof Plug 6Pack
+Connector size: 5.5x2.1mm
+Mounting hole diameter: 10.8mm
+
+
+Power input(s) to sync circuit:  USB-C cable to 5.25V 1A plug in power transformer
 Output signal to clock:   1 second pulse, 3V, 0.5 amps to power sync solenoid
 Source of accurate time:  GPS
 Software:  Arduino running on ESP32-S2
-Arduino sketch:  Custom software written by Matt Vogel, TBD name, TBD location on github
+Arduino sketch:  Custom software written by Matt Vogel
 Arduino GPS library:  Adafruit GPS Library
-
-
-
--------------------------------------------------------------------------------------
-
-OLD INFO FOR REV 1 HARDWARE (prior to 2/5/2024):
-
-Controller board:  Adafruit Feather HUZZAH w.ESP8266  WiFi with stacking headers
-https://www.adafruit.com/product/3213
-3.3V power supply on the board can supply about 500 mA.  The ESP8266 uses about 250 mA, so other circuits can draw about 250 mA.
-
-Relay board:  Adafruit power relay FeatherWing
-https://www.adafruit.com/product/3191
-Omron G5LE-14 3 VDC relay
-Coil resistance:  22.5 Ohms
-Coil current:  133 mA
-Must operate voltage: 2.25 VDC
-Must release voltage: 0.3 VDC
-Operate time:  10 ms
-Release time:  5 ms
-Inductive load max:  4A at 30 VDC
-
-Power input(s) to sync circuit:  TBD
-Output signal to clock:   1 second pulse, 3V, 0.5 amps to power sync solenoid
-Source of accurate time:  NTP via WiFi
-Software:  Arduino running on ESP8266.  See https://github.com/esp8266/Arduino
-Arduino sketch:  Custom software written by Matt Vogel, TBD name, TBD location on github
-Arduino NTP library:  NTPClient by Fabrice Weinberg, version 3.2.1
-
