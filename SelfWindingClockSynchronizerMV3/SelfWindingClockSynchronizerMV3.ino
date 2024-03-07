@@ -40,9 +40,6 @@
 *   Pin 10: Output signal to coil of relay for energizing the synchronizer of the self-winding clock (also red LED on relay board)
 *   Pin 13: Output to red LED on ESP32 board (next to USB-C connector) (HIGH is on)
 *
-*
-* TO DO:
-* - Add failsafe to disable relay signal if it is detected to be active for more than 3 seconds
 */
 
 
@@ -216,12 +213,11 @@ void loop() {
   // RTC time valid logic:
   // 1) When program first starts running, RTC time is invalid
   // 2) RTC time becomes valid when RTC time gets synced to GPS time (handled lower down in the main loop)
-  // 3) RTC time becomes invalid when "time since RTC time last synced to GPS time" becomes greater than one day
+  // 3) RTC time becomes invalid when "time since RTC time last synced to GPS time" becomes greater than 3 days
 
-  if ((gRTCTimeValid) && ((millis() - gTimeRTCLastSyncedToGPS) > ONE_DAY_IN_MILLISECONDS)) {
+  if ( (gRTCTimeValid) && ( (millis() - gTimeRTCLastSyncedToGPS) > (3 * ONE_DAY_IN_MILLISECONDS) ) ) {
     // Time is now invalid
     gRTCTimeValid = false;
-//    gSynchronizerOutputEnabled = false;
     Serial.println("ERR: RTC TIME NOT VALID");
     Serial.print("Sec since RTC synced to GPS: ");
     Serial.println(gTimeRTCLastSyncedToGPS / 1000);
@@ -229,10 +225,14 @@ void loop() {
 
 
   // Check if we need to sync the RTC time to the GPS time base
-  // RTC time gets synced to GPS time in the following cases:
-  // 1) After program start if RTC has never been synced to GPS and the GPS time is valid and at least NUM_GPS_MSGS_RCVD_FOR_TIME_TO_BE_VALID GPS messages have been received
-  // 2) Once a day if GPS time is valid
-  if ( ( ( (gRTCNeverSyncedToGPS) && (gNumGPSMsgsRcvd >= NUM_GPS_MSGS_RCVD_FOR_TIME_TO_BE_VALID)) || ((millis() % ONE_DAY_IN_MILLISECONDS) == 0) ) && gGPSTimeValid ) {
+  // RTC time gets synced to GPS time IF:
+  //  GPS time is valid
+  //      *AND*
+  //  ( RTC has never been synced to GPS  *AND*  at least NUM_GPS_MSGS_RCVD_FOR_TIME_TO_BE_VALID GPS messages have been received
+  //      *OR*
+  //    More than one day has elapsed since RTC was last synced to GPS )
+  //
+  if ( gGPSTimeValid && ( ( (gRTCNeverSyncedToGPS) && (gNumGPSMsgsRcvd >= NUM_GPS_MSGS_RCVD_FOR_TIME_TO_BE_VALID) ) || ( (millis() - gTimeRTCLastSyncedToGPS > ONE_DAY_IN_MILLISECONDS) ) ) ) {
     gRTCNeverSyncedToGPS = false;
     gTimeRTCLastSyncedToGPS = millis();
     syncRTCtoGPS();
@@ -240,7 +240,6 @@ void loop() {
     if (!gRTCTimeValid) {
       // Time is now valid
       gRTCTimeValid = true;
-//      gSynchronizerOutputEnabled = true;
       Serial.println("INFO: RTC TIME VALID");
     }
   }
@@ -279,7 +278,6 @@ void loop() {
   if ( (gRTCTimeValid) && (!gSynchronizerOutputManuallyDisabled) ) {
     // Once an hour, one second before the top of the hour, activate the self-winding clock synchronizer circuit to make sure clock is set properly
     if ( (minutes == 59) && (seconds == 59) )
-//    if ( (seconds == 59) || (seconds == 29) )
     {
       if (digitalRead(CLOCK_SYNC) == LOW)
       {
@@ -294,12 +292,14 @@ void loop() {
     }
   }
 
-  // NOTE: Always want to try to deactivate the clock sync output (even if RTC time is not valid) to handle the
-  // corner case where RTC time had been valid when the clock sync output was activated, but it became invalid
-  // before it was time to deactivate it.
-  // Once an hour, at the top of the hour, deactivate the self-winding clock synchronizer circuit
-  if ( (minutes == 0) && (seconds == 0) )
-  //if ( (seconds == 0) || (seconds == 30) )
+  // Need to deactivate the clock sync output one second after it is activated.  It gets activated one second before
+  // the top of the hour, so need to deactivate it at the top of the hour (i.e., when seconds are equal to zero).
+  // As an additional safety to prevent the output from staying activated for too long, the software deactivates the
+  // output whenever seconds is equal to zero (not just at the top of the hour).  That way, the longest the output
+  // could ever stay activated is one minute.  As a side effect of this, the output will get deactivated when seconds
+  // is equal to zero if the user is manually activating the output, but that should not cause any large issues, since
+  // the manual activation by the user is just a convenience feature for testing the output.
+  if (seconds == 0)
   {
     if (digitalRead(CLOCK_SYNC) == HIGH)
     {
@@ -313,9 +313,7 @@ void loop() {
     }
   }
   
-  // TODO: add failsafe to deactivate the relay if it is detected to be on for more than 3 seconds
-
-  // Update the LCD display about every 200 milliseconds
+    // Update the LCD display about every 200 milliseconds
   if (gMainLoopCounter % 2 == 0) {
     updateDisplay();
   }
@@ -344,7 +342,7 @@ void readGPS()
     if (GPS.newNMEAreceived()) {
       if (GPS.parse(GPS.lastNMEA())) {
         // Increment the number of GPS messages received
-        // It seems like the GPS time does not stabilize right away, so attempting to compensate by not
+        // It seems like the GPS time does not stabilize right away, so compensate by not
         // syncing the RTC to the GPS time until a few GPS messages have been received
         gNumGPSMsgsRcvd++;
         Serial.print("GPS Msgs: ");
